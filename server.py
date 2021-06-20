@@ -6,16 +6,14 @@ from jinja2 import Template
 
 def build_html_response(text_body):
 
-    html_body = f"""<html><head><title>An Example Page</title></head><body>
-    {text_body}</body></html>"""
-    return f"""HTTP/1.1 200 OK\r\nContent-Type:text/html\r\n
-    Content-Length:{len(html_body)}\r\n\r\n{html_body}"""
+    html_body = f"<html><head><title>An Example Page</title></head><body>{text_body}</body></html>"
+    return f"HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: {len(html_body)}\n\n{html_body}"
 
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # so you don't have to change ports when restarting
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server.bind(('localhost', 9291))
+server.bind(('localhost', 9292))
 
 while True:
     server.listen()
@@ -28,5 +26,6 @@ while True:
             html_from_file = myFile.read()
         template = Template(html_from_file)
         body_response = template.render(time=datetime.datetime.now())
-        client_connection.send(build_html_response(body_response).encode())
+        body_response = (build_html_response(body_response))
+        client_connection.send(body_response.encode())
     client_connection.close()
