@@ -1,13 +1,20 @@
 import socket
 import datetime
 from request import Request
+from jinja2 import Template
+
 
 def build_html_response(text_body):
-  html_body = f"<html><head><title>An Example Page</title></head><body>{text_body}</body></html>"
-  return f"HTTP/1.1 200 OK\r\nContent-Type:text/html\r\nContent-Length:{len(html_body)}\r\n\r\n{html_body}"
+
+    html_body = f"""<html><head><title>An Example Page</title></head><body>
+    {text_body}</body></html>"""
+    return f"""HTTP/1.1 200 OK\r\nContent-Type:text/html\r\n
+    Content-Length:{len(html_body)}\r\n\r\n{html_body}"""
+
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # so you don't have to change ports when restarting
+# so you don't have to change ports when restarting
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind(('localhost', 9291))
 
 while True:
@@ -17,5 +24,9 @@ while True:
     if client_request.parsed_request['uri'] == '/':
         client_connection.send(build_html_response('Hello World').encode())
     elif client_request.parsed_request['uri'] == '/time':
-        client_connection.send(build_html_response(datetime.datetime.now()).encode())
+        with open('./templates/time.html', 'r') as myFile:
+            html_from_file = myFile.read()
+        template = Template(html_from_file)
+        body_response = template.render(time=datetime.datetime.now())
+        client_connection.send(build_html_response(body_response).encode())
     client_connection.close()
